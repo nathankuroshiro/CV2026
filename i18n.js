@@ -31,3 +31,23 @@ let saved='en';try{saved=localStorage.getItem('portfolio-language')||'en';}catch
 document.querySelector('#print-cv')?.addEventListener('click',()=>window.print());
 document.querySelector('#copy-email')?.addEventListener('click',async()=>{const status=document.querySelector('#copy-status');try{await navigator.clipboard.writeText('nfathullaev10@gmail.com');status.textContent=({en:'Email copied to clipboard.',ru:'Email скопирован.',uz:'Email nusxalandi.'})[current];}catch{status.textContent='Email: nfathullaev10@gmail.com';}});
 })();
+
+/* Persist theme across languages, reloads and case-study pages. */
+(() => {
+const root=document.documentElement;
+const system=window.matchMedia('(prefers-color-scheme: dark)');
+let explicit=null;
+try{const saved=localStorage.getItem('portfolio-theme');if(saved==='dark'||saved==='light')explicit=saved;}catch{}
+const toggle=document.createElement('button');
+toggle.type='button';toggle.className='theme-toggle';
+document.querySelector('.header').append(toggle);
+const sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>';
+const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.5A8.7 8.7 0 0 1 10.5 3a9 9 0 1 0 10 10.5Z"/></svg>';
+function label(){const dark=root.dataset.theme==='dark';const lang=root.lang;const text=dark?({en:'Switch to light theme',ru:'Включить светлую тему',uz:'Yorug‘ mavzuga o‘tish'}):({en:'Switch to dark theme',ru:'Включить тёмную тему',uz:'Qorong‘i mavzuga o‘tish'});toggle.setAttribute('aria-label',text[lang]||text.en);toggle.title=text[lang]||text.en;toggle.innerHTML=dark?sun:moon;}
+function apply(theme){root.dataset.theme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=theme==='dark'?'#141a16':'#f7f8f4';label();}
+apply(explicit||(system.matches?'dark':'light'));
+toggle.addEventListener('click',()=>{explicit=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('portfolio-theme',explicit);}catch{}apply(explicit);});
+system.addEventListener('change',()=>{if(!explicit)apply(system.matches?'dark':'light');});
+new MutationObserver(label).observe(root,{attributes:true,attributeFilter:['lang']});
+window.addEventListener('storage',event=>{if(event.key==='portfolio-theme'){explicit=['light','dark'].includes(event.newValue)?event.newValue:null;apply(explicit||(system.matches?'dark':'light'));}});
+})();
